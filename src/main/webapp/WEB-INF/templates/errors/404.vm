@@ -1,0 +1,44 @@
+#set($layout = "empty.vm")
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Language" content="zh-CN">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <title>页面不存在</title>
+    <style type="text/css">
+        .error-page-wrap > .segment {padding-bottom: 80px;}
+        #logo {padding: 0 0 15px;}
+        #errorIcon {font-size: 24px!important;margin-top: -10px!important;}
+        #backBtn {display: none}
+    </style>
+</head>
+<body>
+<div class="error-page-wrap">
+    <div class="ui center aligned basic segment">
+        <h2 class="ui header"><i id="errorIcon" class="exclamation triangle red icon"></i>抱歉，您访问的页面没找到</h2>
+        <div>我们已经将此错误信息记录下来，并将尽快处理，为此造成您的不便请多见谅</div>
+        <div class="ui hidden divider"></div>
+        <div class="actions">
+            <a id="backBtn" class="ui basic button" href="javascript:history.go(-1)"><i class="left arrow icon"></i> 返回上页</a>
+            <a class="ui basic button" href="https://www.oschina.net"><i class="home icon"></i>网站首页</a>
+        </div>
+    </div>
+    #*
+    <div class="ui center aligned basic segment">
+        #if(!$link.checkMobile($request))
+            <iframe scrolling='no' frameborder='0' src='//yibo.iyiyun.com/js/yibo404/key/1' width='652' height='468' style='margin:0 auto;'></iframe>
+        #end
+    </div>
+    *#
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (history.length > 1) {
+            document.querySelector('#backBtn').style.display = 'inline-block';
+        }
+    });
+</script>
+</body>
+</html>

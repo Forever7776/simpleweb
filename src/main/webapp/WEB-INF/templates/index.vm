@@ -1,0 +1,9 @@
+#set($layout = 'default.vm')
+
+123
+$format.removeImagesLink("123")
+#set($root = $req.contextPath)
+#set($static = "http://p6cfjoz1f.bkt.clouddn.com")
+#set($static = $req.contextPath)
+$root
+$static

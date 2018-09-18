@@ -1,0 +1,235 @@
+##Velocity 宏定义文件
+
+#*
+ * 以相对路径方式嵌入动态页面
+ *#
+#macro(invoke $__p_page)#if($__p_page.startsWith(
+    "/"))#parse($__p_page)#else#set($__uri = $resource.this_vm())#set($__path = $__uri.substring(0, $__uri.lastIndexOf(
+    "/")))#parse("$__path/$__p_page")#end#end
+
+#*
+ * 以相对路径方式嵌入静态页面
+ *#
+#macro(insert $__p_page)#if($__p_page.startsWith(
+    "/"))#include($__p_page)#else#set($__uri = $resource.this_vm())#set($__path = $__uri.substring(0, $__uri.lastIndexOf(
+    "/")))#include("$__path/$__p_page")#end#end
+
+
+#macro(simple_pager $__uri $__obj_count $__page_size)
+    #if($__uri.indexOf("?")>=0)#set($param_char='&')#else#set($param_char='?')#end
+    #if(!$__uri.endsWith("?") && !$__uri.endsWith("&"))
+        #set($__p_uri = "${__uri}${param_char}")
+    #else
+        #set($__p_uri = $__uri)
+    #end
+    #set($page_count = $format.page_count($__obj_count, $__page_size))
+    #if($page_count > 1)
+        #set($__p = $req.param('p',1))
+        #set($last_page = $__p - 1)
+        #set($next_page = $__p + 1)
+        #if(!$link.checkMobile($request))
+        <div class="ui compact menu">
+            <a class="#if($__p==1)disabled#end item" title="第一页"#if($__p>1) href="${__p_uri}p=1"#end>
+                <i class="angle double left icon"></i>
+            </a>
+            <a class="#if($last_page<=0)disabled#end item" title="上一页"#if($last_page>0)
+               href="${__p_uri}p=$last_page"#end>
+                <i class="angle left icon"></i>
+            </a>
+            <a class="disabled item">
+                第 $__p 页，共 $page_count 页
+            </a>
+            <a class="#if($next_page>$page_count)disabled#end item" title="上一页"#if($next_page<=$page_count)
+               href="${__p_uri}p=$next_page"#end>
+                <i class="angle right icon"></i>
+            </a>
+            <a class="#if($__p>=$page_count)disabled#end item" title="最后一页"#if($__p<$page_count)
+               href="${__p_uri}p=$page_count"#end>
+                <i class="angle double right icon"></i>
+            </a>
+        </div>
+        #else
+        <div class="ui compact menu">
+            <a class="#if($__p==1)disabled#end item" title="第一页"#if($__p>1) href="${__p_uri}p=1"#end>
+                <i class="angle double left icon"></i>
+            </a>
+            <a class="#if($last_page<=0)disabled#end item" title="上一页"#if($last_page>0)
+               href="${__p_uri}p=$last_page"#end>
+                <i class="angle left icon"></i>
+            </a>
+            <a class="#if($next_page>$page_count)disabled#end item" title="上一页"#if($next_page<=$page_count)
+               href="${__p_uri}p=$next_page"#end>
+                <i class="angle right icon"></i>
+            </a>
+            <a class="#if($__p>=$page_count)disabled#end item" title="最后一页"#if($__p<$page_count)
+               href="${__p_uri}p=$page_count"#end>
+                <i class="angle double right icon"></i>
+            </a>
+        </div>
+        #end
+    #end
+#end
+
+##分页处理
+#macro(pager $__uri $__obj_count $__page_size)
+    #if($__obj_count > $__page_size)
+        #if($__uri.indexOf("?")>=0)#set($param_char='&')#else#set($param_char='?')#end
+        #if(!$__uri.endsWith("?") && !$__uri.endsWith("&"))
+            #set($__p_uri = "${__uri}${param_char}")
+        #else
+            #set($__p_uri = $__uri)
+        #end
+        #set($PAGE_COUNT = $format.page_count($__obj_count, $__page_size))
+        #set($__p = $req.param('p',1))
+        #if($__p <= $PAGE_COUNT)
+            #set($pre_page = $__p - 1)
+            #set($next_page = $__p + 1)
+            #if($__p > 3)
+                #set($begin_idx = $__p - 3)
+            #else
+                #set($begin_idx = 1)
+            #end
+            #set($end_idx = $begin_idx + 9)
+            #if($end_idx > $PAGE_COUNT)#set($end_idx = $PAGE_COUNT)#end
+            #if(!$link.checkMobile($request))
+                <div class="ui pagination menu">
+                    #if($__p > 1)
+                        <a href="${__p_uri}p=$pre_page" class="item">&lt;</a>
+                    #end
+                    #if($begin_idx > 1)
+                        <a href="${__p_uri}" class="item">1</a>
+                    #end
+                    #foreach($idx in [$begin_idx..$end_idx])
+                        #if($idx != $__p)
+                            <a href="${__p_uri}p=$idx" class="item">$idx</a>
+                        #else
+                            <a href="${__p_uri}p=$idx" class="active item">$idx</a>
+                        #end
+                    #end
+                    #if($end_idx < $PAGE_COUNT)
+                        <a href="${__p_uri}p=$PAGE_COUNT" class="item">$PAGE_COUNT</a>
+                    #end
+                    #if($__p < $PAGE_COUNT)
+                        <a href="${__p_uri}p=$next_page" class="item">&gt;</a>
+                    #end
+                </div>
+            #else
+                <div class="ui pagination menu">
+                    #if($__p == 1)
+                        <a class="disabled item">&lt;</a>
+                    #end
+                    #if($__p > 1)
+                        <a href="${__p_uri}p=$pre_page" class="item">&lt;</a>
+                    #end
+                    #if($__p < $PAGE_COUNT)
+                        <a href="${__p_uri}p=$next_page" class="item">&gt;</a>
+                    #end
+                    #if($__p == $PAGE_COUNT)
+                        <a class="disabled item">&gt;</a>
+                    #end
+                </div>
+            #end
+        #end
+    #end
+#end
+
+## 头像处理(小头像50x50)
+#macro(userSmallPortraitByImage $user_id $user_portrait $user_name $__className)
+    #if($!user_portrait && $!user_portrait!='')
+    <div class="osc-avatar small-portrait $!{__className}" title="$!{user_name}" data-user-id="$!{user_id}">
+        <img src="$!{link.userSmallPortraitByPortrait($user_portrait)}" alt="$!{user_name}" title="$!{user_name}"/>
+    </div>
+    #else
+        #set($___user_name_first_char = $link.sub($!{user_name}))
+    <div class="osc-avatar small-portrait $!{__className}" title="$!{user_name}" data-user-id="$!{user_id}">
+        <span class="text-portrait" style="background: $!{link.getAvatarBackgroundColor($!{___user_name_first_char})}">$!{___user_name_first_char}</span>
+    </div>
+    #end
+#end
+
+## 头像处理(小头像50x50)
+#macro(userSmallPortrait $__user $__className)
+    #if($__user)
+        #if($format.not_empty(${__user.portrait}))
+            #set($___user_name = $format.html($!{__user.name}))
+            <div class="osc-avatar small-portrait $!{__className}" title="$!{___user_name}" data-user-id="$!{__user.id}">
+                <img src="$!{link.userSmallPortrait($__user)}" alt="$!{___user_name}" title="$!{___user_name}"/>
+            </div>
+        #else
+            #set($___user_name = $format.html($!{__user.name}))
+            #set($___user_name_first_char = $link.sub($!{___user_name}))
+            <div class="osc-avatar small-portrait $!{__className}" title="$!{___user_name}" data-user-id="$!{__user.id}">
+                <span class="text-portrait" style="background: $!{link.getAvatarBackgroundColor($!{___user_name_first_char})}">$!{___user_name_first_char}</span>
+            </div>
+        #end
+    #else
+        <div class="osc-avatar small-portrait $!{__className}">
+            <img src="http://p3atba4ko.bkt.clouddn.com/lbxx.jpg?imageView2/1/w/220/h/165" alt="">
+        </div>
+    #end
+#end
+
+## 头像处理(大头像200x200)
+#macro(userLargePortrait $__user $__className)
+    #if($__user)
+        #if($format.not_empty($!{__user.portrait}))
+            #set($___user_name = $format.html($!{__user.name}))
+            <div class="osc-avatar large-portrait $!{__className}" title="$!{___user_name}" data-user-id="$!{__user.id}">
+                <img src="$!{link.userLargePortrait($__user)}" alt="$!{___user_name}" title="$!{___user_name}"/>
+            </div>
+        #else
+            #set($___user_name = $format.html($!{__user.name}))
+            #set($___user_name_first_char = $link.sub($!{___user_name}))
+            <div class="osc-avatar large-portrait $!{__className}" title="$!{___user_name}" data-user-id="$!{__user.id}">
+                <span class="text-portrait" style="background: $!{link.getAvatarBackgroundColor($!{___user_name_first_char})}">$!{___user_name_first_char}</span>
+            </div>
+        #end
+    #else
+        <div class="osc-avatar large-portrait $!{__className}">
+            <img src="http://p3atba4ko.bkt.clouddn.com/lbxx.jpg?imageView2/1/w/220/h/165" alt="">
+        </div>
+    #end
+#end
+
+## 广告片段
+#macro(activity_content $activityId, $ident)
+    #set($activityContent = $ActivityContent.findByActivityAndIdent($activityId, $ident))
+    #if($activityContent && $activityContent.getStatus() == 0)
+        #if($activityContent.typeOfHtml())
+            $!{activityContent.content}
+        #elseif($activityContent.typeOfCss())
+            <style type="text/css">
+                $!{activityContent.content}
+            </style>
+        #elseif($activityContent.typeOfJs())
+            <script type="text/javascript">
+                $!{activityContent.content}
+            </script>
+        #end
+    #end
+#end
+
+## 广告位
+#macro(ad_banner $ident)
+    #set($ad = $AdBanner.getByIdent($ident))
+    #if($ad && ${ad.status} == 1)
+        #if($ad.IsDisplayHtml())
+            <div name="$!format.html(${ad.ident})" #if($ad.HasAdId()) data-traceid="$!format.html(${ad.ad_id})"
+                 data-tracepid="$!format.html(${ad.getIdent()})" #end>
+                $ad.getHtml()
+            </div>
+        #else
+            <a name="$!format.html(${ad.ident})"/>
+            <a #if($ad.HasAdId()) data-traceid="$!format.html(${ad.ad_id})"
+                                  data-tracepid="$!format.html(${ad.getIdent()})"  #end href="$!format.html(${ad.href})"
+                                  target="_blank" title="$!format.html(${ad.detail})">
+                <img src="$!format.html(${ad.img})" width="${ad.width}" height="${ad.height}">
+            </a>
+            #if($ad.IsUseJs())
+                $ad.getScript()
+            #end
+        #end
+    #end
+#end
+
+#set($root = $req.contextPath)
